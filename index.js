@@ -32,7 +32,7 @@ const main = async (src, bucketName, tag) => {
   const files = walkSync(src);
 
   for (const file of files) {
-    const dest = `${tag}/${file}`;
+    const dest = file.replace(src, tag);
 
     const mimeType = mime.lookup(file);
 
