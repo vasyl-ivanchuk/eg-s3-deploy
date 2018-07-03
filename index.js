@@ -8,6 +8,13 @@ const AWS_REGION = process.env.AWS_REGION;
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 
+const walkSync = dir =>
+  fs.readdirSync(dir).reduce((files, file) => {
+    const name = path.join(dir, file);
+    const isDirectory = fs.statSync(name).isDirectory();
+    return isDirectory ? [...files, ...walkSync(name)] : [...files, name];
+  }, []);
+
 const main = async (src, bucketName, tag) => {
   guard(AWS_REGION, "AWS_REGION");
   guard(AWS_ACCESS_KEY_ID, "AWS_ACCESS_KEY_ID");
@@ -22,23 +29,18 @@ const main = async (src, bucketName, tag) => {
     secretAccessKey: AWS_SECRET_ACCESS_KEY
   });
 
-  const files = fs.readdirSync(src);
+  const files = walkSync(src);
+
   for (const file of files) {
     const dest = `${tag}/${file}`;
-    const filePath = path.join(src, file);
-    const mimeType = mime.lookup(filePath);
 
-    await instance.writeFile(dest, fs.readFileSync(filePath), {
+    const mimeType = mime.lookup(file);
+
+    await instance.writeFile(dest, fs.readFileSync(file), {
       ACL: "public-read",
       ContentType: mimeType
     });
-    console.log(
-      "Uploaded: ",
-      filePath,
-      "->",
-      `${bucketName}/${dest}`,
-      mimeType
-    );
+    console.log("Uploaded: ", file, "->", `${bucketName}/${dest}`, mimeType);
   }
 };
 
