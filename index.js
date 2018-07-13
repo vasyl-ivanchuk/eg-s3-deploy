@@ -50,16 +50,4 @@ const guard = (val, name) => {
   }
 };
 
-const args = process.argv.slice(2);
-
-main(...args)
-  .then(() => {
-    console.log("Done");
-    process.exit(0);
-  })
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
-  });
-
 module.exports = main;
